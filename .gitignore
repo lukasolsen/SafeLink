@@ -1,0 +1,6 @@
+*.pyc
+*.db
+Lib
+Scripts
+server/.env
+client/client_id.json
