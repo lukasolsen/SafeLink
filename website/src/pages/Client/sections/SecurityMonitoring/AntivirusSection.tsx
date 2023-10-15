@@ -46,6 +46,7 @@ const AntivirusSection: React.FC = () => {
       },
       xAxis: {
         type: "time",
+        
       },
       yAxis: {
         type: "value",

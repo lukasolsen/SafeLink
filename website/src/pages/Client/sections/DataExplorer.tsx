@@ -163,8 +163,30 @@ const DataExplorer: React.FC = () => {
       type: "JSON",
       name: "Data File 1",
       content: {
-        key1: "value1",
-        key2: "value2",
+        comments: [
+          {
+            id: 1,
+            body: "This is some awesome thinking!",
+            postId: 100,
+            user: {
+              id: 63,
+              username: "eburras1q",
+            },
+          },
+          {
+            id: 2,
+            body: "What terrific math skills you’re showing!",
+            postId: 27,
+            user: {
+              id: 71,
+              username: "omarsland1y",
+            },
+          },
+          // 30 items
+        ],
+        total: 340,
+        skip: 0,
+        limit: 30,
       },
       lastUpdated: "2023-03-14",
       category: "Browsers",
@@ -222,13 +244,8 @@ const DataExplorer: React.FC = () => {
         )}
       </h2>
       {selectedData ? (
-        <div className="mt-4 bg-gray-800 p-4 rounded-lg h-96 overflow-y-auto">
-          <div className="bg-gray-900 p-2 rounded-lg mb-4">
-            <pre className="text-white">{selectedData.type}</pre>
-          </div>
-          {selectedData.type === "JSON" && (
-            <JSONViewer data={selectedData} />
-          )}
+        <div>
+          {selectedData.type === "JSON" && <JSONViewer data={selectedData} />}
         </div>
       ) : (
         <div className="mt-4">

@@ -22,7 +22,10 @@ def get_ip():
 
 def get_usb_devices():
   devices = []
-  for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_USBHub"):
+  devicesCom = win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_USBHub")
+  if len(devicesCom) == 0:
+    return []
+  for device in devicesCom:
     devices.append({
       "Name": device.Name,
       "Description": device.Description,
@@ -36,7 +39,10 @@ def get_usb_devices():
 
 def get_bluetooth_devices():
     devices = []
-    for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}'"):
+    devicesCom = win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}'")
+    if len(devicesCom) == 0:
+      return []
+    for device in devicesCom:
       devices.append({
         "Name": device.Name,
         "Description": device.Description,
@@ -50,7 +56,10 @@ def get_bluetooth_devices():
 
 def get_pci_devices():
   devices = []
-  for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'"):
+  devicesCom = win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'")
+  if len(devicesCom) == 0:
+    return []
+  for device in devicesCom:
     devices.append({
       "Name": device.Name,
       "Description": device.Description,
@@ -64,7 +73,10 @@ def get_pci_devices():
 
 def get_audio_devices():
   devices = []
-  for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_SoundDevice"):
+  devicesCom = win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_SoundDevice")
+  if len(devicesCom) == 0:
+    return []
+  for device in devicesCom:
     devices.append({
       "Name": device.Name,
       "Description": device.Description,
@@ -75,6 +87,23 @@ def get_audio_devices():
       "StatusInfo": device.StatusInfo,
     })
   return devices
+
+def get_battery_information():
+  # check if percent exists if not then just say None
+  if (psutil.sensors_battery() == None):
+    return json.dumps({
+      "Percent": "None",
+      "Power Plugged": "None",
+      "Seconds Left": "None",
+    })
+  percent = psutil.sensors_battery().percent or None
+  power_plugged = psutil.sensors_battery().power_plugged or None
+  secsleft = psutil.sensors_battery().secsleft or None
+  return json.dumps({
+    "Percent": percent,
+    "Power Plugged": power_plugged,
+    "Seconds Left": secsleft,
+  })
 
 def get_system_information():
   return json.dumps({
@@ -140,11 +169,7 @@ def get_system_information():
           "Idle Time": psutil.cpu_times().idle,
         },
       },
-      "Battery": {
-        "Percent": psutil.sensors_battery().percent,
-        "Power Plugged": psutil.sensors_battery().power_plugged,
-        "Seconds Left": psutil.sensors_battery().secsleft,
-      },
+      "Battery": get_battery_information(),
       "Privileges": ctypes.windll.shell32.IsUserAnAdmin(),
       "Devices": {
           "USB Devices": get_usb_devices(),

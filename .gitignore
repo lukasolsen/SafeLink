@@ -4,3 +4,4 @@ Lib
 Scripts
 server/.env
 client/client_id.json
+pyvenv.cfg
