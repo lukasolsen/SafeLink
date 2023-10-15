@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ client }) => {
               {client.computer_name}
             </h2>
             <p className="text-gray-500 dark:text-gray-400">
-              IP Address: {client.ip}
+              IP Address: {client.ipv4}
             </p>
           </div>
         </div>

@@ -31,7 +31,7 @@ const Clients: React.FC = () => {
       },
       {
         Header: "IP Address",
-        accessor: "ip",
+        accessor: "ipv4",
       },
       {
         Header: "Active",

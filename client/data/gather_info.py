@@ -34,8 +34,49 @@ def get_usb_devices():
     })
   return devices
 
+def get_bluetooth_devices():
+    devices = []
+    for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}'"):
+      devices.append({
+        "Name": device.Name,
+        "Description": device.Description,
+        "DeviceID": device.DeviceID,
+        "Status": device.Status,
+        "PNPDeviceID": device.PNPDeviceID,
+        "Caption": device.Caption,
+        "StatusInfo": device.StatusInfo,
+      })
+    return devices
+
+def get_pci_devices():
+  devices = []
+  for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'"):
+    devices.append({
+      "Name": device.Name,
+      "Description": device.Description,
+      "DeviceID": device.DeviceID,
+      "Status": device.Status,
+      "PNPDeviceID": device.PNPDeviceID,
+      "Caption": device.Caption,
+      "StatusInfo": device.StatusInfo,
+    })
+  return devices
+
+def get_audio_devices():
+  devices = []
+  for device in win32com.client.Dispatch("WbemScripting.SWbemLocator").ConnectServer(".","root\cimv2").ExecQuery("SELECT * FROM Win32_SoundDevice"):
+    devices.append({
+      "Name": device.Name,
+      "Description": device.Description,
+      "DeviceID": device.DeviceID,
+      "Status": device.Status,
+      "PNPDeviceID": device.PNPDeviceID,
+      "Caption": device.Caption,
+      "StatusInfo": device.StatusInfo,
+    })
+  return devices
+
 def get_system_information():
-  DOS_OS_BITS = 0x00000001
   return json.dumps({
       "IPv4": get_ip(),
       "ComputerName": os.environ["COMPUTERNAME"],
@@ -44,7 +85,21 @@ def get_system_information():
         "CPU": {
           "Name": platform.processor(),
           "Cores": psutil.cpu_count(),
-          "Usage": str(psutil.cpu_percent()) + "%"
+          "Usage": str(psutil.cpu_percent()) + "%",
+          "Speed": str(round(psutil.cpu_freq().current / 1000.0, 2)) + " GHz",
+          "Max Speed": str(round(psutil.cpu_freq().max / 1000.0, 2)) + " GHz",
+          "Min Speed": str(round(psutil.cpu_freq().min / 1000.0, 2)) + " GHz",
+          
+          "Virtual Cores": psutil.cpu_count(logical=True),
+          "Physical Cores": psutil.cpu_count(logical=False),
+          
+          "Times": {
+            "User": psutil.cpu_times().user,
+            "System": psutil.cpu_times().system,
+            "Idle": psutil.cpu_times().idle,
+            "Interrupt": psutil.cpu_times().interrupt,
+            "DPC": psutil.cpu_times().dpc,
+          },
         },
         "RAM": {
           "Total": str(round(psutil.virtual_memory().total / (1024.0 ** 3), 2)),
@@ -93,30 +148,59 @@ def get_system_information():
       "Privileges": ctypes.windll.shell32.IsUserAnAdmin(),
       "Devices": {
           "USB Devices": get_usb_devices(),
+          "Audio Devices": get_audio_devices(),
+          "Bluetooth Devices": get_bluetooth_devices(),
+          #"PCI Devices": get_pci_devices(),
       }
     }
   )
 
+def get_network_interfaces():
+  interfaces = []
+  for interface in psutil.net_if_addrs().keys():
+      addresses = []
+      for address in psutil.net_if_addrs()[interface]:
+          if address.family == socket.AF_INET:
+              addresses.append(address.address)
+      interfaces.append({
+        "Name": interface,
+        "Addresses": addresses,
+      })
+  return interfaces
+
+def get_network_configurations():
+  print(psutil.net_if_addrs())
+  # Check if Ethernet, or something else is the internet. Such as they can be using a wireless connection.
+  
+  internet_type = None
+  if "Ethernet" in psutil.net_if_addrs():
+    internet_type = "Ethernet"
+  elif "WiFi" in psutil.net_if_addrs():
+    internet_type = "WiFi"
+  else:
+    internet_type = "Ethernet"
+
+  DNS = psutil.net_if_addrs()[internet_type][1].address
+
+  return json.dumps({
+    "DNS": psutil.net_if_addrs()[internet_type][1].address,
+    "Gateway": psutil.net_if_addrs()[internet_type][2].address,
+    "Subnet Mask": psutil.net_if_addrs()[internet_type][3].address,
+
+    "DHCP Enabled": psutil.net_if_stats()[internet_type].isup,
+    "DHCP Server": psutil.net_if_stats()[internet_type].duplex,
+    "DHCP Lease Obtained": psutil.net_if_stats()[internet_type].speed,
+    "DHCP Lease Expires": psutil.net_if_stats()[internet_type].mtu,
+
+    "IP Address": psutil.net_if_addrs()[internet_type][0].address,
+  })
+
 def get_network_information():
   return json.dumps({
-    "Network Adapter": {
-      "Name": "Ethernet",
-      "Status": "Connected",
-      "Speed": "1 Gbps",
-      "Type": "Wired"
-    },
-    "Network Speed": "100 Mbps",
-    "Network Type": "Wi-Fi",
-    "Network Status": "Connected",
-    "Network Usage": {
-      "Upload": "1.2 MB/s",
-      "Download": "5.3 MB/s"
-    },
-    "Network Connections": [
-      {
-        "IP": "",
-        "Port": 80,
-        "Protocol": "HTTP"
-      },
-    ]
+    "Network Interfaces": get_network_interfaces(),
+    "Network Connections": psutil.net_connections(),
+    "Network Stats": psutil.net_io_counters(),
+    "Network Configuration": get_network_configurations(),
+
+    "Devices Connected": psutil.net_if_stats(),
   })

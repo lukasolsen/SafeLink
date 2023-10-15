@@ -138,11 +138,15 @@ class PostgreSQLDataManager:
 
         client_id, data, status, created_at = client_record
         system_info = json.loads(data["System Info"])
+        system = system_info.get("Hardware").get("System")
 
         client_info = {
           "id": client_id,
           "ipv4": system_info.get("IPv4"),
           "computer_name": system_info.get("ComputerName"),
+          "os": system.get("OS"),
+          "architecture": system.get("OS Architecture"),
+          "version": system.get("OS Version"),
           "status": status,
           "created_at": created_at
         }

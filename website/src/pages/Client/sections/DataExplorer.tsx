@@ -5,11 +5,11 @@ import {
   FiSearch,
   FiArrowLeft,
   FiGlobe,
-  FiArrowRight,
   FiArrowDown,
   FiArrowUp,
 } from "react-icons/fi";
 import { useTable, useGlobalFilter, useSortBy, HeaderGroup } from "react-table";
+import JSONViewer from "./DataExplorer/Json-Viewer";
 
 const Categories = {
   Browsers: {
@@ -227,11 +227,7 @@ const DataExplorer: React.FC = () => {
             <pre className="text-white">{selectedData.type}</pre>
           </div>
           {selectedData.type === "JSON" && (
-            <div className="bg-gray-900 p-2 rounded-lg">
-              <pre className="text-white">
-                {JSON.stringify(selectedData.content, null, 2)}
-              </pre>
-            </div>
+            <JSONViewer data={selectedData} />
           )}
         </div>
       ) : (

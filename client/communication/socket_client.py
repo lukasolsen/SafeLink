@@ -1,7 +1,7 @@
 import socket
 from communication.id import SimpleVariableStorage
 import json
-from data.gather_info import get_system_information
+from data.gather_info import get_system_information, get_network_information
 import sys
 
 # Define a Socket Class, it will be used for handling communications between the client and server.
@@ -95,5 +95,7 @@ class SocketClient:
         print(get_system_information())
         # Send system info back.
         self.send_command({"type": "information", "part": "system info", "data": get_system_information()})
+      elif (mess["part"] == "network_info"):
+        self.send_command({"type": "information", "part": "network info", "data": get_network_information()})
       else:
         self.send_command({"type": "information", "part": mess["part"], "data": {}})

