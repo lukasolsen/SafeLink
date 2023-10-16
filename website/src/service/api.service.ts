@@ -186,3 +186,12 @@ export const get_client_disk = (id: string) => {
     },
   });
 };
+
+// Get client information..
+export const get_client_hardware = (id: string) => {
+  return axios.get(API_URL + "clients/" + id + "/hardware", {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  });
+};

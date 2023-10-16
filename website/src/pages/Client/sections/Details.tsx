@@ -1,4 +1,4 @@
-import { FiActivity, FiInfo, FiShield } from "react-icons/fi";
+import { FiActivity } from "react-icons/fi";
 import SystemInfo from "./Details/SystemInfo";
 import NetworkInfo from "./Details/NetworkInfo";
 import SecurityInfo from "./Details/SecurityInfo";

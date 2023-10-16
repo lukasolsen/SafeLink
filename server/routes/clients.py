@@ -129,6 +129,23 @@ async def get_battery(id: str, current_user: User = Depends(get_current_user)):
     client = json.loads(client)
     return {"battery": client["Battery"]}
 
+@app.get("/clients/{id}/hardware")
+async def get_hardware(id: str, current_user: User = Depends(get_current_user)):
+    DataManager = PostgreSQLDataManager()
+    client = DataManager.get_all_client_info(id)
+    DataManager.close_connection()
+
+    if (client == None):
+        return {"output": "Error: Client not found"}
+    
+    print(client)
+    
+    client = client["data"]["System Info"]
+
+    client = json.loads(client)["Hardware"]
+    return {"hardware": client}
+
+
 class PowerShellSuggestions(BaseModel):
     command: str
 

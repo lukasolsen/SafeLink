@@ -194,9 +194,6 @@ def get_network_interfaces():
   return interfaces
 
 def get_network_configurations():
-  print(psutil.net_if_addrs())
-  # Check if Ethernet, or something else is the internet. Such as they can be using a wireless connection.
-  
   internet_type = None
   if "Ethernet" in psutil.net_if_addrs():
     internet_type = "Ethernet"
@@ -204,20 +201,14 @@ def get_network_configurations():
     internet_type = "WiFi"
   else:
     internet_type = "Ethernet"
-
-  DNS = psutil.net_if_addrs()[internet_type][1].address
+  print(psutil.net_if_addrs()[internet_type])
 
   return json.dumps({
-    "DNS": psutil.net_if_addrs()[internet_type][1].address,
-    "Gateway": psutil.net_if_addrs()[internet_type][2].address,
-    "Subnet Mask": psutil.net_if_addrs()[internet_type][3].address,
-
-    "DHCP Enabled": psutil.net_if_stats()[internet_type].isup,
-    "DHCP Server": psutil.net_if_stats()[internet_type].duplex,
-    "DHCP Lease Obtained": psutil.net_if_stats()[internet_type].speed,
-    "DHCP Lease Expires": psutil.net_if_stats()[internet_type].mtu,
-
+    "Internet Type": internet_type,
     "IP Address": psutil.net_if_addrs()[internet_type][0].address,
+    "Netmask": psutil.net_if_addrs()[internet_type][0].netmask,
+    "Broadcast IP": psutil.net_if_addrs()[internet_type][0].broadcast,
+    "MAC Address": psutil.net_if_addrs()[internet_type][0].address,
   })
 
 def get_network_information():
