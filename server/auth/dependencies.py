@@ -29,7 +29,6 @@ def get_password_hash(password):
 
 def authenticate_user(username: str, password: str):
     user = get_user_by_username(username)
-    print(user[0].username)
     if not user:
         return False
     if not verify_password(password, user[0].password):

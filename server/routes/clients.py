@@ -78,8 +78,6 @@ async def get_disk(id: str, current_user: User = Depends(get_current_user)):
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    print(client)
-    
     client = client["data"]["System Info"]
     client = json.loads(client)
     return {"disk": client["Hardware"]["Disk"]}
@@ -92,8 +90,6 @@ async def get_ram(id: str, current_user: User = Depends(get_current_user)):
 
     if (client == None):
         return {"output": "Error: Client not found"}
-    
-    print(client)
     
     client = client["data"]["System Info"]
     client = json.loads(client)
@@ -108,8 +104,6 @@ async def get_cpu(id: str, current_user: User = Depends(get_current_user)):
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    print(client)
-    
     client = client["data"]["System Info"]
     client = json.loads(client)
     return {"cpu": client["Hardware"]["CPU"]}
@@ -123,8 +117,6 @@ async def get_battery(id: str, current_user: User = Depends(get_current_user)):
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    print(client)
-    
     client = client["data"]["System Info"]
     client = json.loads(client)
     return {"battery": client["Battery"]}
@@ -137,8 +129,6 @@ async def get_hardware(id: str, current_user: User = Depends(get_current_user)):
 
     if (client == None):
         return {"output": "Error: Client not found"}
-    
-    print(client)
     
     client = client["data"]["System Info"]
 
