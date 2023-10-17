@@ -6,9 +6,13 @@ import sys
 
 # Define a Socket Class, it will be used for handling communications between the client and server.
 class SocketClient:
-  def __init__(self, host: str, port: int):
+  def __init__(self, host: str, port: int, realtimehost: str, realtimeport: int):
     self.host = host
     self.port = port
+
+    self.realtimehost = realtimehost
+    self.realtimeport = realtimeport
+
     self.connected = False
 
     # Connect to the server
@@ -29,6 +33,13 @@ class SocketClient:
     except Exception as e:
       print(f"Socket Client -> Error sending command: {str(e)}")
 
+  def real_time_information(self, command: dict):
+    try:
+      commandAsString = json.dumps(command)
+      self.client.send(commandAsString.encode())
+    except Exception as e:
+      print(f"Socket Client -> Error sending command: {str(e)}")
+
   def connect(self):
     try:
       self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,6 +52,15 @@ class SocketClient:
     except Exception as e:
       print(f"Socket Client -> Error connecting to {self.host}:{self.port}: {str(e)}")
       self.connected = False
+      return
+
+  def real_time_connect(self):
+    try:
+      self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      self.client.connect((self.realtimehost, self.realtimeport))
+      print(f"Socket Client -> Connected to {self.realtimehost}:{self.realtimeport}")
+    except Exception as e:
+      print(f"Socket Client -> Error connecting to {self.realtimehost}:{self.realtimeport}: {str(e)}")
       return
 
   def _handshake(self):

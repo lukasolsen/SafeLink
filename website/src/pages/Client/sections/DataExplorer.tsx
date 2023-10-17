@@ -5,11 +5,10 @@ import {
   FiSearch,
   FiArrowLeft,
   FiGlobe,
-  FiArrowDown,
-  FiArrowUp,
 } from "react-icons/fi";
-import { useTable, useGlobalFilter, useSortBy, HeaderGroup } from "react-table";
 import JSONViewer from "./DataExplorer/Json-Viewer";
+import Table from "../../../components/Table";
+import { Cell, Row } from "react-table";
 
 const Categories = {
   Browsers: {
@@ -31,118 +30,6 @@ type Data = {
   content: string | object;
   lastUpdated: string;
   category?: keyof typeof Categories;
-};
-
-type DataTableProps = {
-  data: Data[];
-  columns: HeaderGroup<Data>[];
-  setSelectedData: React.Dispatch<React.SetStateAction<Data | undefined>>;
-};
-
-const DataTable: React.FC<DataTableProps> = ({
-  data,
-  columns,
-  setSelectedData,
-}) => {
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable(
-      {
-        columns,
-        data,
-      },
-      useGlobalFilter,
-      useSortBy
-    );
-
-  return (
-    <table {...getTableProps()} className="w-full table-fixed">
-      <thead>
-        {headerGroups.map((headerGroup) => (
-          <tr
-            {...headerGroup.getHeaderGroupProps()}
-            className="text-sky-400 select-none"
-          >
-            {headerGroup.headers.map((column) => (
-              <th
-                {...column.getHeaderProps(column.getSortByToggleProps())}
-                className="p-2 text-left"
-              >
-                <div className="flex items-center">
-                  {column.render("Header")}
-                  {column.isSorted ? (
-                    column.isSortedDesc ? (
-                      <FiArrowDown className="text-sky-400" />
-                    ) : (
-                      <FiArrowUp className="text-sky-400" />
-                    )
-                  ) : null}
-                </div>
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row) => {
-          prepareRow(row);
-          return (
-            <tr
-              {...row.getRowProps()}
-              className="p-2 rounded-md mb-2 hover:text-white"
-            >
-              {row.cells.map((cell) => {
-                if (cell.column.id === "name") {
-                  return (
-                    <td
-                      {...cell.getCellProps()}
-                      className={`border-b border-gray-700 rounded-md hover:text-sky-500 cursor-pointer`}
-                      onClick={() => setSelectedData(row.original)}
-                    >
-                      <div className="flex items-center">
-                        {cell.row.original.type === "Database" ? (
-                          <FiDatabase className="mr-2" />
-                        ) : (
-                          <FiFile className="mr-2" />
-                        )}
-                        {cell.value}
-                      </div>
-                    </td>
-                  );
-                }
-                if (cell.column.id === "category") {
-                  return (
-                    <td
-                      {...cell.getCellProps()}
-                      className="p-2 border-b border-gray-700 rounded-md"
-                    >
-                      <div
-                        className={`flex items-center text-white rounded-md`}
-                      >
-                        <span
-                          className={`text-${Categories[cell.value].color}`}
-                        >
-                          {Categories[cell.value].icon}
-                        </span>
-                        {Categories[cell.value].name}
-                      </div>
-                    </td>
-                  );
-                }
-                return (
-                  <td
-                    {...cell.getCellProps()}
-                    className="p-2 border-b border-gray-700"
-                  >
-                    {cell.render("Cell")}
-                  </td>
-                );
-              })}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
 };
 
 const DataExplorer: React.FC = () => {
@@ -193,6 +80,51 @@ const DataExplorer: React.FC = () => {
     },
     // Add more data items
   ];
+
+  const renderData = (cell: Cell, row: Row<object>) => {
+    if (cell.column.id === "name") {
+      return (
+        <td
+          {...cell.getCellProps()}
+          className={`border-b border-gray-700 rounded-md hover:text-sky-500 cursor-pointer`}
+          onClick={() => setSelectedData(row.original)}
+        >
+          <div className="flex items-center">
+            {cell.row.original.type === "Database" ? (
+              <FiDatabase className="mr-2" />
+            ) : (
+              <FiFile className="mr-2" />
+            )}
+            {cell.value}
+          </div>
+        </td>
+      );
+    }
+    if (cell.column.id === "category") {
+      return (
+        <td
+          {...cell.getCellProps()}
+          className="p-2 border-b border-gray-700 rounded-md"
+        >
+          <div className={`flex items-center text-white rounded-md`}>
+            <span className={`text-${Categories[cell.value].color}`}>
+              {Categories[cell.value].icon}
+            </span>
+            {Categories[cell.value].name}
+          </div>
+        </td>
+      );
+    }
+
+    return (
+      <td
+        {...cell.getCellProps()}
+        className="p-2 border-b border-gray-700 rounded-md"
+      >
+        {cell.render("Cell")}
+      </td>
+    );
+  };
 
   const columns = [
     {
@@ -260,12 +192,13 @@ const DataExplorer: React.FC = () => {
             <FiSearch className="absolute text-gray-400 top-3 right-3" />
           </div>
           <div className="bg-gray-800 p-4 mt-4 rounded-lg h-96 overflow-y-auto">
-            <DataTable
+            <Table
               data={data.filter((item) =>
                 item.name.toLowerCase().includes(searchQuery.toLowerCase())
               )}
               columns={columns}
               setSelectedData={setSelectedData}
+              renderData={renderData}
             />
           </div>
         </div>

@@ -30,7 +30,6 @@ const Client: React.FC = () => {
 
       if (id) {
         const response = await getVictim(id);
-        console.log("Response ->", response.data.client);
         await setClient(response.data.client);
       }
     };
