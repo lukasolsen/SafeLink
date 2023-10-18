@@ -182,23 +182,24 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
     },
   ];
 
-  const renderData = (cell: Cell, row: Row<object>) => {
+  const renderData = (cell: Cell, row: Row<object>, key?: number) => {
     if (cell.column.id === "part") {
       return (
-        <td key={row.id} className="p-2 border-b border-gray-700">
+        <td key={key} className="p-2 border-b border-gray-700">
           <span
             className={`text-sm font-medium ${
               cell.value === "process" ? "text-green-500" : "text-yellow-500"
             }`}
           >
-            {cell.value}
+            {/* Make it start with a uppercase */}
+            {cell.value.charAt(0).toUpperCase() + cell.value.slice(1)}
           </span>
         </td>
       );
     }
 
     return (
-      <td key={row.id} className="p-2 border-b border-gray-700">
+      <td key={key} className="p-2 border-b border-gray-700">
         {cell.value}
       </td>
     );
@@ -206,7 +207,7 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
 
   return (
     <div className="dark:bg-dark-bg bg-dark-bg-secondary min-h-screen p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-96 min-h-full h-[60vh]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-96 h-[60vh]">
         {/* Disk Space Metric */}
         <MetricCard
           title="Disk Space"

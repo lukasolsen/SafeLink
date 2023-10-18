@@ -94,10 +94,14 @@ const Clients: React.FC = () => {
     },
   ];
 
-  const renderData = (cell: Cell, row: Row<object>): JSX.Element => {
+  const renderData = (
+    cell: Cell,
+    row: Row<object>,
+    key?: number
+  ): JSX.Element => {
     if (cell.column.id === "status") {
       return (
-        <td>
+        <td key={key}>
           <span
             className={`${
               row.values.status === "Online" ? "text-green-500" : "text-sky-500"
@@ -109,7 +113,7 @@ const Clients: React.FC = () => {
       );
     } else if (cell.column.id === "id") {
       return (
-        <td>
+        <td key={key}>
           <button
             className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
             onClick={(e) => {
