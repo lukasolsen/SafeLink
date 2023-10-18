@@ -197,7 +197,6 @@ const DataExplorer: React.FC = () => {
                 item.name.toLowerCase().includes(searchQuery.toLowerCase())
               )}
               columns={columns}
-              setSelectedData={setSelectedData}
               renderData={renderData}
             />
           </div>

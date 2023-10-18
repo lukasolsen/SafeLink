@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import { useTable } from "react-table";
+import { Cell, Row } from "react-table";
 import { getVictims } from "../service/api.service";
+import Table from "../components/Table";
 
 const Clients: React.FC = () => {
   const [victims, setVictims] = React.useState<Victims[]>([]);
@@ -23,20 +24,80 @@ const Clients: React.FC = () => {
   }, []); // Add an empty dependency array to trigger the effect only once
 
   // Define table columns
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: "Client Name",
-        accessor: "computer_name",
-      },
-      {
-        Header: "IP Address",
-        accessor: "ipv4",
-      },
-      {
-        Header: "Active",
-        accessor: "status",
-        Cell: ({ row }: any) => (
+  // const columns = React.useMemo(
+  //   () => [
+  //     {
+  //       Header: "Client Name",
+  //       accessor: "computer_name",
+  //     },
+  //     {
+  //       Header: "IP Address",
+  //       accessor: "ipv4",
+  //     },
+  //     {
+  //       Header: "Active",
+  //       accessor: "status",
+  //       Cell: ({ row }: any) => (
+  //         <span
+  //           className={`${
+  //             row.values.status === "Online" ? "text-green-500" : "text-sky-500"
+  //           }`}
+  //         >
+  //           {row.values.status}
+  //         </span>
+  //       ),
+  //     },
+  //     {
+  //       Header: "Actions",
+  //       accessor: "id",
+  //       Cell: ({ row }: any) => (
+  //         <button
+  //           className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
+  //           onClick={(e) => {
+  //             console.log(row);
+  //             e.preventDefault();
+  //             if (row && row.values.id) {
+  //               window.location.href = `/dashboard/client/${row.values.id}`;
+  //             }
+  //           }}
+  //         >
+  //           View
+  //         </button>
+  //       ),
+  //     },
+  //   ],
+  //   []
+  // );
+
+  // console.log(victims);
+
+  // // Create a table instance
+  // const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
+  //   useTable({ columns, data }); // Provide the 'data' prop
+
+  const columns = [
+    {
+      Header: "Client Name",
+      accessor: "computer_name",
+    },
+    {
+      Header: "IP Address",
+      accessor: "ipv4",
+    },
+    {
+      Header: "Active",
+      accessor: "status",
+    },
+    {
+      Header: "Actions",
+      accessor: "id",
+    },
+  ];
+
+  const renderData = (cell: Cell, row: Row<object>): JSX.Element => {
+    if (cell.column.id === "status") {
+      return (
+        <td>
           <span
             className={`${
               row.values.status === "Online" ? "text-green-500" : "text-sky-500"
@@ -44,12 +105,11 @@ const Clients: React.FC = () => {
           >
             {row.values.status}
           </span>
-        ),
-      },
-      {
-        Header: "Actions",
-        accessor: "id",
-        Cell: ({ row }: any) => (
+        </td>
+      );
+    } else if (cell.column.id === "id") {
+      return (
+        <td>
           <button
             className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
             onClick={(e) => {
@@ -62,17 +122,12 @@ const Clients: React.FC = () => {
           >
             View
           </button>
-        ),
-      },
-    ],
-    []
-  );
-
-  console.log(victims);
-
-  // Create a table instance
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({ columns, data }); // Provide the 'data' prop
+        </td>
+      );
+    } else {
+      return <td>{cell.render("Cell")}</td>;
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -81,7 +136,7 @@ const Clients: React.FC = () => {
           Clients
         </h2>
 
-        {/* React Table */}
+        {/* React Table }
         {victims.length !== 0 && (
           <table {...getTableProps()} className="w-full">
             <thead>
@@ -112,6 +167,10 @@ const Clients: React.FC = () => {
               })}
             </tbody>
           </table>
+        )}
+            */}
+        {victims.length !== 0 && (
+          <Table columns={columns} data={data} renderData={renderData} />
         )}
 
         {/* Show a message if there are no victims */}

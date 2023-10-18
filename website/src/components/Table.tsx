@@ -12,16 +12,10 @@ import {
 type DataTableProps = {
   data: any[];
   columns: Column<any>[];
-  setSelectedData: React.Dispatch<React.SetStateAction<any | undefined>>;
   renderData: (cell: Cell, row: Row<object>) => JSX.Element;
 };
 
-const Table: React.FC<DataTableProps> = ({
-  data,
-  columns,
-  setSelectedData,
-  renderData,
-}) => {
+const Table: React.FC<DataTableProps> = ({ data, columns, renderData }) => {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable(
       {

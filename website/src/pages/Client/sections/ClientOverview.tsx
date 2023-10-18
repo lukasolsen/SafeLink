@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { FiHardDrive } from "react-icons/fi";
 import SecurityStatusMetric from "../../../components/private/SecurityStatusMetrics";
 import ClientActivitiesMetric from "../../../components/private/ClientActivityMetrics";
-import { get_client_disk } from "../../../service/api.service";
+import { get_client_disk, get_client_logs } from "../../../service/api.service";
+import Table from "../../../components/Table";
+import { Cell, Row } from "react-table";
+import { FaFileAlt } from "react-icons/fa";
 
 const MetricCard: React.FC<{
   title: string;
@@ -55,6 +58,60 @@ const MetricCard: React.FC<{
   );
 };
 
+const ClientVersionAndUpdates: React.FC = () => {
+  return (
+    <div className="bg-dark-bg-secondary rounded-lg p-4 mt-6">
+      <h2 className="text-xl font-semibold mb-4">Client Version and Updates</h2>
+      <div className="flex flex-row items-center justify-between">
+        <div>
+          <p className="text-gray-400">Client Version</p>
+          <p className="text-xl font-semibold">1.0.0</p>
+        </div>
+        <div>
+          <p className="text-gray-400">Last Update Check</p>
+          <p className="text-xl font-semibold">1.0.0</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ClientActivationButtons: React.FC = () => {
+  return (
+    <div className="bg-dark-bg-secondary rounded-lg p-4 mt-6">
+      <h2 className="text-xl font-semibold mb-4">Client Activation</h2>
+      <div className="flex flex-row items-center justify-between">
+        <div>
+          <p className="text-gray-400">Client Activation</p>
+          <p className="text-xl font-semibold">Activated</p>
+        </div>
+        <div>
+          <p className="text-gray-400">Last Activation</p>
+          <p className="text-xl font-semibold">1.0.0</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SecurityAlertsTab: React.FC = () => {
+  return (
+    <div className="bg-dark-bg-secondary rounded-lg p-4 mt-6">
+      <h2 className="text-xl font-semibold mb-4">Security Alerts</h2>
+      <div className="flex flex-row items-center justify-between">
+        <div>
+          <p className="text-gray-400">Security Alerts</p>
+          <p className="text-xl font-semibold">Activated</p>
+        </div>
+        <div>
+          <p className="text-gray-400">Last Security Alert</p>
+          <p className="text-xl font-semibold">1.0.0</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 type DiskType = {
   Total: string;
   Used: string;
@@ -73,6 +130,8 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
     Free: "",
     Percent: "",
   });
+  const [logCooldown, setLogCooldown] = useState<number>(0);
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const getDiskInformation = async () => {
@@ -86,10 +145,68 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
     console.log(disk);
   }, []);
 
+  useEffect(() => {
+    if (logCooldown === 0) {
+      const getLogs = async () => {
+        get_client_logs(id).then((response) => {
+          setLogs(response.data.logs);
+          console.log(response.data.logs);
+          response.data.logs.map((log) => {
+            console.log(log.message);
+          });
+        });
+      };
+      getLogs();
+      setLogCooldown(5);
+    }
+
+    const interval = setInterval(() => {
+      setLogCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [logCooldown]);
+
+  const columns = [
+    {
+      Header: "Type",
+      accessor: "part",
+    },
+    {
+      Header: "Message",
+      accessor: "message",
+    },
+    {
+      Header: "Timestamp",
+      accessor: "timestamp",
+    },
+  ];
+
+  const renderData = (cell: Cell, row: Row<object>) => {
+    if (cell.column.id === "part") {
+      return (
+        <td key={row.id} className="p-2 border-b border-gray-700">
+          <span
+            className={`text-sm font-medium ${
+              cell.value === "process" ? "text-green-500" : "text-yellow-500"
+            }`}
+          >
+            {cell.value}
+          </span>
+        </td>
+      );
+    }
+
+    return (
+      <td key={row.id} className="p-2 border-b border-gray-700">
+        {cell.value}
+      </td>
+    );
+  };
+
   return (
     <div className="dark:bg-dark-bg bg-dark-bg-secondary min-h-screen p-6">
-      {/* Metrics Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-96 min-h-full h-[60vh]">
         {/* Disk Space Metric */}
         <MetricCard
           title="Disk Space"
@@ -98,14 +215,29 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
           unit="GB"
         />
 
-        <SecurityStatusMetric />
-
-        {/* Client Activities Metric */}
-        <ClientActivitiesMetric />
+        <div className="bg-dark-bg-secondary rounded-lg p-4">
+          <h2 className="text-lg text-white mb-4 flex items-center">
+            <FaFileAlt className="mr-2 text-blue-500" /> Client Logs
+          </h2>
+          <Table columns={columns} data={logs} renderData={renderData} />
+        </div>
       </div>
 
-      {/* Additional Content */}
-      <div className="mt-8">{/* Additional content goes here */}</div>
+      {/*<SecurityStatusMetric />*/}
+
+      {/*<div className="grid grid-cols-1 sm:grid-cols-2 mt-4 gap-4">
+        <ClientActivitiesMetric />
+
+        {/* Additional content goes here }
+        {/* Include Client Version and Update Check }
+        <ClientVersionAndUpdates />
+
+        {/* Include Client Activation Buttons }
+        <ClientActivationButtons />
+
+        {/* Include Security Alerts Tab }
+        <SecurityAlertsTab />
+      </div>*/}
     </div>
   );
 };

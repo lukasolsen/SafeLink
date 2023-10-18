@@ -195,3 +195,11 @@ export const get_client_hardware = (id: string) => {
     },
   });
 };
+
+export const get_client_logs = (id: string) => {
+  return axios.get(API_URL + "clients/" + id + "/logs", {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  });
+};

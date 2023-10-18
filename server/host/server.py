@@ -103,6 +103,7 @@ class RATServer(metaclass=SingletonMeta):
             return "Error executing command"
 
         executeCommands(command_type, command, client_socket)
+        #self.trasmitter.send_command(command_type, command, client_socket)
 
 
     async def transfer_file(self, victim, file: UploadFile):

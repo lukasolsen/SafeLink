@@ -56,7 +56,10 @@ async def execute_command(id: str, command_type: str, command: str, current_user
     print(output)
     if output is None or output == "Error receiving output":
         return {"output": {"Error": "Output not received", "result": "Error receiving output"}}
-    output = json.loads(output)
+    try:
+      output = json.loads(output)
+    except Exception as e:
+      print(e)
     return {"output": output}
 
 
@@ -72,68 +75,92 @@ async def upload_file(id: str, file: UploadFile = File(...)):
 @app.get("/clients/{id}/disk")
 async def get_disk(id: str, current_user: User = Depends(get_current_user)):
     DataManager = PostgreSQLDataManager()
-    client = DataManager.get_all_client_info(id)
+    client = DataManager.get_value("data", id)[0]
     DataManager.close_connection()
 
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    client = client["data"]["System Info"]
+    print(client)
+    
+    client = client["System Info"]
     client = json.loads(client)
     return {"disk": client["Hardware"]["Disk"]}
 
 @app.get("/clients/{id}/ram")
 async def get_ram(id: str, current_user: User = Depends(get_current_user)):
     DataManager = PostgreSQLDataManager()
-    client = DataManager.get_all_client_info(id)
+    client = DataManager.get_value("data", id)[0]
     DataManager.close_connection()
 
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    client = client["data"]["System Info"]
+    client = client["System Info"]
     client = json.loads(client)
     return {"ram": client["Hardware"]["RAM"]}
 
 @app.get("/clients/{id}/cpu")
 async def get_cpu(id: str, current_user: User = Depends(get_current_user)):
     DataManager = PostgreSQLDataManager()
-    client = DataManager.get_all_client_info(id)
+    client = DataManager.get_value("data", id)[0]
     DataManager.close_connection()
 
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    client = client["data"]["System Info"]
+    client = client["System Info"]
     client = json.loads(client)
     return {"cpu": client["Hardware"]["CPU"]}
 
 @app.get("/clients/{id}/battery")
 async def get_battery(id: str, current_user: User = Depends(get_current_user)):
     DataManager = PostgreSQLDataManager()
-    client = DataManager.get_all_client_info(id)
+    client = DataManager.get_value("data", id)[0]
     DataManager.close_connection()
 
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    client = client["data"]["System Info"]
+    client = client["System Info"]
     client = json.loads(client)
     return {"battery": client["Battery"]}
 
 @app.get("/clients/{id}/hardware")
 async def get_hardware(id: str, current_user: User = Depends(get_current_user)):
     DataManager = PostgreSQLDataManager()
-    client = DataManager.get_all_client_info(id)
+    client = DataManager.get_value("data", id)[0]
     DataManager.close_connection()
 
     if (client == None):
         return {"output": "Error: Client not found"}
     
-    client = client["data"]["System Info"]
+    client = client["System Info"]
 
     client = json.loads(client)["Hardware"]
     return {"hardware": client}
+
+@app.get("/clients/{id}/logs")
+async def get_logs(id: str, current_user: User = Depends(get_current_user)):
+    DataManager = PostgreSQLDataManager()
+    client = DataManager.get_value("logs", id)
+    DataManager.close_connection()
+    if (client == None):
+        return {"output": "Error: Client not found"}
+    
+    client = client[0]
+
+    # for each list in the logs, we want to turn it into a json
+    client = list(client)
+    logs = []
+    for log in client:
+        logs.append(json.loads(log))
+    
+
+    
+
+
+    return {"logs": logs}
 
 
 class PowerShellSuggestions(BaseModel):

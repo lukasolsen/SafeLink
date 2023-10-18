@@ -5,16 +5,12 @@ import json
 
 dotenv.load_dotenv()
 
-databases = {
-    "clients": "clients",
-}
-
 class PostgreSQLDataManager:
-    def __init__(self, database=databases["clients"]):
-        self.connection = self.connect_to_database(database)
+    def __init__(self):
+        self.connection = self.connect_to_database()
         self.create_table()
 
-    def connect_to_database(self, database):
+    def connect_to_database(self):
         return psycopg2.connect(
             dbname=dotenv.dotenv_values().get("POSTGRES_DB"),
             user=dotenv.dotenv_values().get("POSTGRES_USER"),
@@ -31,6 +27,7 @@ class PostgreSQLDataManager:
                 data JSONB,
                 status VARCHAR(50) DEFAULT 'online',
                 socket_ip VARCHAR(50),
+                logs JSONB,
                 created_at TIMESTAMP DEFAULT NOW()
             )
         ''')
@@ -155,28 +152,53 @@ class PostgreSQLDataManager:
       except:
         return None
 
-    def get_all_client_info(self, client_id):
-        cursor = self.connection.cursor()
-        cursor.execute('SELECT * FROM client_data WHERE client_id = %s', (client_id,))
-        client_record = cursor.fetchone()
-        if client_record is None:
-            return None
-
-        client_id, data, status, socket_ip, created_at = client_record
-        return {
-            "id": client_id,
-            "data": data,
-            "status": status,
-            "socket_ip": socket_ip,
-            "created_at": created_at
-        }
-
     def _generate_client_id(self):
         return uuid.uuid4().hex
 
-    # Additional function to retrieve all client IDs
+    def get_client_id(self, socket_ip):
+        cursor = self.connection.cursor()
+        cursor.execute('SELECT client_id FROM client_data WHERE socket_ip = %s', (socket_ip,))
+        client_id = cursor.fetchone()
+        return client_id[0] if client_id else None
+
     def get_all_client_ids(self):
         cursor = self.connection.cursor()
         cursor.execute('SELECT client_id FROM client_data')
         client_ids = [row[0] for row in cursor.fetchall()]
         return client_ids
+
+    def add_log(self, data, client_id):
+      cursor = self.connection.cursor()
+
+      cursor.execute('SELECT logs FROM client_data WHERE client_id = %s', (client_id,))
+
+      logs = cursor.fetchone()
+      print(logs)
+      print(data)
+      
+      # turn the tuple into a list
+      logs = list(logs)
+      # check if the logs are empty or null
+      if logs[0] is None:
+        logs = []
+      else:
+        logs = logs[0]
+
+      logs.append(data)
+
+      cursor.execute('UPDATE client_data SET logs = %s WHERE client_id = %s', (json.dumps(logs), client_id))
+
+      self.connection.commit()
+
+    def get_value(self, key, client_id):
+      cursor = self.connection.cursor()
+
+      # Construct the SQL query with the column name inserted directly
+      query = f"SELECT {key} FROM client_data WHERE client_id = %s"
+      cursor.execute(query, (client_id,))
+
+      data = cursor.fetchone()
+      if data is None:
+        return None
+
+      return data
