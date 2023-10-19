@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   FaAddressCard,
+  FaCog,
   FaDatabase,
   FaLaptop,
   FaUser,
@@ -15,6 +16,7 @@ import Details from "./sections/Details";
 import ClientOverview from "./sections/ClientOverview";
 import SecurityMonitoring from "./sections/SecurityMonitoring";
 import DataExplorer from "./sections/DataExplorer";
+import ProcessesTab from "./sections/Processes";
 
 const Client: React.FC = () => {
   const [tab, setTab] = useState("overview");
@@ -53,6 +55,11 @@ const Client: React.FC = () => {
       name: "security-monitoring",
       icon: <FaUserShield className="mr-2" />,
       title: "Security Monitoring",
+    },
+    {
+      name: "processes",
+      icon: <FaCog className="mr-2" />,
+      title: "Processes",
     },
     {
       name: "terminal",
@@ -94,6 +101,8 @@ const Client: React.FC = () => {
           {tab === "detail" && <Details client={client} />}
 
           {tab === "security-monitoring" && <SecurityMonitoring />}
+
+          {tab === "processes" && <ProcessesTab />}
 
           {tab === "terminal" && (
             <div className="mt-4">
