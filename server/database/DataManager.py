@@ -173,7 +173,6 @@ class PostgreSQLDataManager:
       cursor.execute('SELECT logs FROM client_data WHERE client_id = %s', (client_id,))
 
       logs = cursor.fetchone()
-      print(logs)
       print(data)
       
       # turn the tuple into a list

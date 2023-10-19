@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { FiHardDrive } from "react-icons/fi";
+import React, { memo, useEffect, useMemo, useState } from "react";
+import { FiDatabase, FiFile, FiHardDrive } from "react-icons/fi";
 import SecurityStatusMetric from "../../../components/private/SecurityStatusMetrics";
 import ClientActivitiesMetric from "../../../components/private/ClientActivityMetrics";
 import { get_client_disk, get_client_logs } from "../../../service/api.service";
 import Table from "../../../components/Table";
 import { Cell, Row } from "react-table";
-import { FaFileAlt } from "react-icons/fa";
+import { FaClipboard, FaCog, FaFileAlt } from "react-icons/fa";
+import Search from "../../../components/Search";
+import Select from "../../../components/Select";
 
 const MetricCard: React.FC<{
   title: string;
@@ -15,6 +17,7 @@ const MetricCard: React.FC<{
 }> = ({ title, value, max, unit }) => {
   const usedPercentage = ((parseInt(value, 10) / max) * 100).toFixed(2);
   const colorClass = parseInt(usedPercentage) > 80 ? "red-400" : "green-400";
+  const bgColor = parseInt(usedPercentage) > 80 ? "bg-red-400" : "bg-green-400";
 
   return (
     <div className={`dark:bg-dark-bg-secondary p-4 rounded-lg shadow-md`}>
@@ -26,20 +29,20 @@ const MetricCard: React.FC<{
           <p className={`text-3xl font-semibold text-${colorClass}`}>
             {value} {unit}
           </p>
-          <p className={`text-gray-400`}>Used</p>
+          <p className="text-gray-400">Used</p>
         </div>
         <div>
-          <p className={`text-3xl font-semibold text-white`}>
+          <p className="text-3xl font-semibold text-white">
             {max} {unit}
           </p>
-          <p className={`text-gray-400`}>Total</p>
+          <p className="text-gray-400">Total</p>
         </div>
       </div>
       <div className="relative pt-1">
         <div className="flex mb-2 items-center justify-between">
           <div>
             <span
-              className={`text-xs font-semibold inline-block py-1 px-2 rounded-full text-${colorClass}`}
+              className={`text-xs font-semibold inline-block py-1 px-2 rounded-full bg-${colorClass} text-white`}
             >
               {usedPercentage}% Used
             </span>
@@ -49,7 +52,7 @@ const MetricCard: React.FC<{
           <div className="h-2 mt-2 w-full bg-gray-600 rounded-full">
             <div
               style={{ width: `${usedPercentage}%` }}
-              className={`h-2 rounded-full bg-${colorClass}`}
+              className={`h-2 rounded-full ${bgColor}`}
             ></div>
           </div>
         </div>
@@ -118,12 +121,23 @@ type DiskType = {
   Free: string;
   Percent: string;
 };
-
-type ClientOverViewProps = {
+interface ClientOverviewProps {
   id: string;
+}
+
+type LogType = {
+  part: string;
+  message: string;
+  timestamp: string;
 };
 
-const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
+type LogPart = {
+  color: string;
+  icon?: React.ReactNode;
+  name: string;
+};
+
+const ClientOverview: React.FC<ClientOverviewProps> = ({ id }) => {
   const [disk, setDisk] = useState<DiskType>({
     Total: "",
     Used: "",
@@ -131,30 +145,49 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
     Percent: "",
   });
   const [logCooldown, setLogCooldown] = useState<number>(0);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<LogType[]>([]);
+  const [curPage, setCurPage] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
+  const [select, setSelect] = useState<string>("process");
+
+  const logParts: LogPart[] = [
+    {
+      color: "green-500",
+      icon: <FaCog />,
+      name: "process",
+    },
+    {
+      color: "purple-500",
+      icon: <FaClipboard />,
+      name: "clipboard",
+    },
+  ];
 
   useEffect(() => {
     const getDiskInformation = async () => {
-      get_client_disk(id).then((response) => {
-        console.log(response.data);
+      try {
+        const response = await get_client_disk(id);
         setDisk(response.data.disk);
-      });
+      } catch (error) {
+        console.error("Error fetching disk information:", error);
+      }
     };
 
     getDiskInformation();
-    console.log(disk);
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (logCooldown === 0) {
+      // Clear previous logs
+      //setLogs([]);
+
       const getLogs = async () => {
-        get_client_logs(id).then((response) => {
+        try {
+          const response = await get_client_logs(id);
           setLogs(response.data.logs);
-          console.log(response.data.logs);
-          response.data.logs.map((log) => {
-            console.log(log.message);
-          });
-        });
+        } catch (error) {
+          console.error("Error fetching logs:", error);
+        }
       };
       getLogs();
       setLogCooldown(5);
@@ -165,45 +198,83 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [logCooldown]);
+  }, [logCooldown, id]);
 
-  const columns = [
-    {
-      Header: "Type",
-      accessor: "part",
-    },
-    {
-      Header: "Message",
-      accessor: "message",
-    },
-    {
-      Header: "Timestamp",
-      accessor: "timestamp",
-    },
-  ];
+  // Memoize columns to prevent unnecessary re-renders
+  const columns = useMemo(
+    () => [
+      {
+        Header: "Type",
+        accessor: "part",
+      },
+      {
+        Header: "Message",
+        accessor: "message",
+      },
+      {
+        Header: "Timestamp",
+        accessor: "timestamp",
+      },
+    ],
+    []
+  );
 
-  const renderData = (cell: Cell, row: Row<object>, key?: number) => {
-    if (cell.column.id === "part") {
+  const filteredLogs = useMemo(() => {
+    console.log(select);
+    return logs.filter(
+      (log) =>
+        log.message.toLowerCase().includes(search.toLowerCase()) &&
+        log.part === select
+    );
+  }, [logs, search, select]);
+
+  // Memoize renderData function to avoid re-creating it on each render
+  const renderData = useMemo(() => {
+    return (cell: Cell, row: Row<object>, key?: number) => {
+      if (cell.column.id === "part") {
+        return (
+          <td key={key} className="p-2 border-b border-gray-700">
+            <span
+              className={`text-sm font-medium text-${
+                logParts.find((part) => part.name === cell.value)?.color
+              } ${
+                logParts.find((part) => part.name === cell.value)?.icon &&
+                "flex items-center"
+              }`}
+            >
+              {logParts.find((part) => part.name === cell.value)?.icon && (
+                <span className="mr-2">
+                  {logParts.find((part) => part.name === cell.value)?.icon}
+                </span>
+              )}
+              {/* Make it start with an uppercase */}
+              {cell.value.charAt(0).toUpperCase() + cell.value.slice(1)}
+            </span>
+          </td>
+        );
+      }
+      if (cell.column.id === "message") {
+        return (
+          <td
+            key={key}
+            className="p-2 border-b border-gray-700 overflow-auto w-6/12"
+          >
+            {cell.value}
+          </td>
+        );
+      }
       return (
         <td key={key} className="p-2 border-b border-gray-700">
-          <span
-            className={`text-sm font-medium ${
-              cell.value === "process" ? "text-green-500" : "text-yellow-500"
-            }`}
-          >
-            {/* Make it start with a uppercase */}
-            {cell.value.charAt(0).toUpperCase() + cell.value.slice(1)}
-          </span>
+          {cell.value}
         </td>
       );
-    }
+    };
+  }, [logParts]);
 
-    return (
-      <td key={key} className="p-2 border-b border-gray-700">
-        {cell.value}
-      </td>
-    );
-  };
+  const options = logParts.map((part) => ({
+    label: part.name,
+    value: part.name,
+  }));
 
   return (
     <div className="dark:bg-dark-bg bg-dark-bg-secondary min-h-screen p-6">
@@ -220,7 +291,19 @@ const ClientOverview: React.FC<ClientOverViewProps> = ({ id }) => {
           <h2 className="text-lg text-white mb-4 flex items-center">
             <FaFileAlt className="mr-2 text-blue-500" /> Client Logs
           </h2>
-          <Table columns={columns} data={logs} renderData={renderData} />
+          <div className="flex flex-row justify-between items-center mb-4">
+            <Select options={options} onChange={(value) => setSelect(value)} />
+            <Search onSearch={(value) => setSearch(value)} />
+          </div>
+
+          <Table
+            columns={columns}
+            data={filteredLogs}
+            renderData={renderData}
+            curPage={curPage}
+            changePage={setCurPage}
+            pagination
+          />
         </div>
       </div>
 

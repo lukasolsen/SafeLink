@@ -9,6 +9,7 @@ import CommandBlock from "./CommandBlock";
 type TerminalProps = {
   id: string;
   currentDirectory: string;
+  online: boolean;
 };
 
 type TerminalTab = {
@@ -30,7 +31,11 @@ type PowerShellCommand = {
   ModuleName: string;
 };
 
-const Terminal: React.FC<TerminalProps> = ({ id, currentDirectory }) => {
+const Terminal: React.FC<TerminalProps> = ({
+  id,
+  currentDirectory,
+  online,
+}) => {
   const [command, setCommand] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("Powershell"); // Default language
 
@@ -221,66 +226,54 @@ const Terminal: React.FC<TerminalProps> = ({ id, currentDirectory }) => {
               ))}
             </pre>
           </div>
-          <div className="flex flex-col gap-y-2 mt-8">
-            <span className="text-sky-400 mt-4">{currentTab}</span>
-            <textarea
-              className="bg-transparent focus:outline-none dark:text-white rounded-sm"
-              value={command}
-              onChange={(e) => {
-                setCommand(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  executeCommand();
-                }
-              }}
-            />
-
-            {/* Add suggestions */}
-            <div className="flex flex-col gap-y-2 mt-4">
-              {suggestions.map((suggestion) => (
-                <div
-                  key={suggestion.Name}
-                  className="bg-gray-800 text-white p-2 rounded-sm cursor-pointer hover:bg-blue-600 hover:text-white"
-                  onClick={() => setCommand(suggestion.Name)}
-                >
-                  <div className="text-blue-400 font-semibold text-sm">
-                    {suggestion.Source}
-                  </div>
-                  <div className="text-lg">{suggestion.Name}</div>
-                  <div className="text-gray-400">{suggestion.Description}</div>
-                </div>
-              ))}
+          {!online && (
+            <div className="flex flex-col justify-center mt-8">
+              <h2 className="text-red-400 text-xl text-center">
+                The user is offline, wait till the user reconnects
+              </h2>
             </div>
-          </div>
+          )}
+          {online && (
+            <div className="flex flex-col gap-y-2 mt-8">
+              <span className="text-sky-400 mt-4">{currentTab}</span>
+              <textarea
+                className="bg-transparent focus:outline-none dark:text-white rounded-sm"
+                value={command}
+                onChange={(e) => {
+                  setCommand(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    executeCommand();
+                  }
+                }}
+              />
+
+              {/* Add suggestions */}
+              <div className="flex flex-col gap-y-2 mt-4">
+                {suggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.Name}
+                    className="bg-gray-800 text-white p-2 rounded-sm cursor-pointer hover:bg-blue-600 hover:text-white"
+                    onClick={() => setCommand(suggestion.Name)}
+                  >
+                    <div className="text-blue-400 font-semibold text-sm">
+                      {suggestion.Source}
+                    </div>
+                    <div className="text-lg">{suggestion.Name}</div>
+                    <div className="text-gray-400">
+                      {suggestion.Description}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
-
-{
-  /*<div
-                  key={index}
-                  className="flex flex-col gap-y-2 border-t-2 border-b-2 border-gray-500 p-2 hover:bg-gray-900 transition-all duration-300"
-                  
-                >
-                  <span className="text-sm text-gray-300 w-full">
-                    {currentDirectory}
-                  </span>
-                  <span className="font-semibold">{command}</span>
-
-                  <span
-                    className={`${
-                      currentTabData.responses[index].error && "text-red-600"
-                    } ${
-                      !currentTabData.responses[index].error && "text-white"
-                    }`}
-                  >
-                    {currentTabData.responses[index].result}
-                  </span>
-                </div>*/
-}
 
 export default Terminal;

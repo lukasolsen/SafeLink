@@ -97,7 +97,11 @@ const Client: React.FC = () => {
 
           {tab === "terminal" && (
             <div className="mt-4">
-              <Terminal id={client.id} currentDirectory={"C:\\Users\\User>"} />
+              <Terminal
+                id={client.id}
+                currentDirectory={"C:\\Users\\User>"}
+                online={client.status === "Online"}
+              />
             </div>
           )}
 

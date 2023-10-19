@@ -104,7 +104,7 @@ const Clients: React.FC = () => {
         <td key={key}>
           <span
             className={`${
-              row.values.status === "Online" ? "text-green-500" : "text-sky-500"
+              row.values.status === "Online" ? "text-green-500" : "text-red-500"
             }`}
           >
             {row.values.status}
